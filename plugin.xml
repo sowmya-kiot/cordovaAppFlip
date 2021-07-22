@@ -2,6 +2,7 @@
 <plugin id="cordova-plugin-appflip" version="0.1.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
    <name>AppFlip</name>
    <js-module name="AppFlip" src="www/AppFlip.js">
+    <runs />
      <clobbers target="cordova.plugins.AppFlip" />
    </js-module>
 <platform name="ios">
@@ -16,6 +17,7 @@
   <config-file parent="/*" target="res/xml/config.xml">
     <feature name="AppFlip">
       <param name="android-package" value="com.appflip.plugin.AppFlip" />
+      <param name="onload" value="true" />
     </feature></config-file>
   <config-file parent="/manifest/application" target="AndroidManifest.xml" android:launchMode="singleTop">
     <activity android:name="com.appflip.plugin.AppFlipActivity">
