@@ -27,7 +27,7 @@ public class AppFlip extends CordovaPlugin {
             callback.success((String) null);
             return;
         }
-        Log.d(TAG, "getInitialPushPayload");
+        Log.d(TAG, client_id+"getInitialPushPayload");
         try {
             String clientID = client_id;
             client_id = null;
@@ -73,6 +73,8 @@ public class AppFlip extends CordovaPlugin {
             String message = args.getString(0);
             this.coolMethod(message, callbackContext);
             return true;
+        } else if(action.equals("getInitialPushPayload")) {
+            getInitialPushPayload(callbackContext);
         }
         return false;
     }

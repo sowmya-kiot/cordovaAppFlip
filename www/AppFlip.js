@@ -6,9 +6,11 @@ coolMethod = function (arg0, success, error) {
 
 var appflip = {
     getInitialPushPayload: function (win, fail) {
-                cordova.exec(win, fail, "AppFlip", "getInitialPushPayload", []);
+               return cordova.exec(win, fail, "AppFlip", "getInitialPushPayload", []);
             },
 }
+
+window.appflip = appflip;
 
 var AppFlip = {
         appflip: appflip
