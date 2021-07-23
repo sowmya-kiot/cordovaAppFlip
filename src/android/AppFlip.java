@@ -94,18 +94,19 @@ public class AppFlip extends CordovaPlugin {
         Intent returnIntent = new Intent();
         String errorCodeString = status;
         int errorCode = 0;
-        if(errorCodeString!=null){
-            try{
-                errorCode = Integer.valueOf(errorCodeString);
-            } catch (NumberFormatException e){
-                return;
-            }
-        }
+        // if(errorCodeString!=null){
+        //     try{
+        //         errorCode = Integer.valueOf(errorCodeString);
+        //     } catch (NumberFormatException e){
+        //         return;
+        //     }
+        // }
         if(code!=null){
             if(code.length()>0) {
                 String authCode = code;
                 returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, authCode);
-                //setResult(Activity.RESULT_OK, returnIntent);
+                cordova.getActivity().setResult(Activity.RESULT_OK, returnIntent);
+                cordova.getActivity().finish();
             }
         }
     }
