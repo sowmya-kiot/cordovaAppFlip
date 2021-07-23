@@ -29,15 +29,21 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.kiotbeta.dev.MainActivity;
+
 public class AppFlipActivity extends Activity {
+    AppFlip appflip = new AppFlip();
     private static String TAG = "AppFlipLogs";
     private String clientId, scopes, redirectUri;
     private static final String EXTRA_APP_FLIP_CLIENT_ID = "CLIENT_ID";
     private static final String EXTRA_APP_FLIP_SCOPES = "SCOPE";
     private static final String EXTRA_APP_FLIP_REDIRECT_URI = "REDIRECT_URI";
     private static final String SIGNATURE_DIGEST_ALGORITHM = "SHA-256";
+    static Intent result = new Intent();
     private String callingAppPackageName = "com.google.appfliptesttool";
     private String callingAppFingerprint = "b3:f6:19:1f:fd:22:34:ec:a2:30:6d:7e:04:14:fc:09:bd:4a:58:15:dc:79:43:67:87:6c:11:66:5f:9e:a4:b9";
+
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -64,8 +70,26 @@ public class AppFlipActivity extends Activity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        finish();
-        forceMainActivityReload();
+        Intent intent = new Intent(this,MainActivity.class);
+//        intent.setPackage("io.kiotbeta.dev");
+//        intent.setAction("android.intent.action.MAIN");
+       startActivityForResult(intent,105);
+        //finish();
+        //forceMainActivityReload();
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == 105){
+            setResult(resultCode,data);
+            finish();
+        }
+    }
+
+    public void getAuthCode(Intent returnIntent) {
+        result = returnIntent;
+       setResult(Activity.RESULT_OK, result);
     }
 
     private boolean validateCallingApp(ComponentName callingActivity) {

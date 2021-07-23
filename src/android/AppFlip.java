@@ -1,120 +1,166 @@
 package com.appflip.plugin;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.nfc.NdefMessage;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.chariotsolutions.nfc.plugin.Util;
+import com.chariotsolutions.nfc.plugin.NfcPlugin;
 
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CallbackContext;
-
-import org.apache.cordova.PluginResult;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-/**
- * This class echoes a string called from JavaScript.
- */
-public class AppFlip extends CordovaPlugin {
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Map;
 
-    private static final String TAG = "TAG";
-    private static final String EXTRA_APP_FLIP_AUTHORIZATION_CODE = "AUTHORIZATION_CODE";
-    public static String client_id;
-    public static CallbackContext globalCallback;
+import io.kiotbeta.dev.MainActivity;
 
-    public void getInitialPushPayload(CallbackContext callback) {
-        if(client_id == null) {
-            Log.d(TAG, "getInitialPushPayload: null");
-            callback.success((String) null);
-            return;
-        }
-        Log.d(TAG, client_id+"getInitialPushPayload");
+public class AppFlipActivity extends Activity {
+    AppFlip appflip = new AppFlip();
+    private static String TAG = "AppFlipLogs";
+    private String clientId, scopes, redirectUri;
+    private static final String EXTRA_APP_FLIP_CLIENT_ID = "CLIENT_ID";
+    private static final String EXTRA_APP_FLIP_SCOPES = "SCOPE";
+    private static final String EXTRA_APP_FLIP_REDIRECT_URI = "REDIRECT_URI";
+    private static final String SIGNATURE_DIGEST_ALGORITHM = "SHA-256";
+    static Intent result = new Intent();
+    private String callingAppPackageName = "com.google.appfliptesttool";
+    private String callingAppFingerprint = "b3:f6:19:1f:fd:22:34:ec:a2:30:6d:7e:04:14:fc:09:bd:4a:58:15:dc:79:43:67:87:6c:11:66:5f:9e:a4:b9";
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
         try {
-            String clientID = client_id;
-            client_id = null;
-            //callback.success(jo);
-            PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, clientID);
-            pluginResult.setKeepCallback(true);
-            callback.sendPluginResult(pluginResult);
-            globalCallback = callback;
-        } catch(Exception error) {
-            try {
-                callback.error(exceptionToJson(error));
+            Intent intent = getIntent();
+            final Context context = getApplicationContext();
+            ComponentName callingActivity = getCallingActivity();
+            if (!validateCallingApp(callingActivity)) {
+                Toast.makeText(context, "Sender cert or name mismatch!", Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Intent sender certificate or package ID mismatch!");
+                return;
             }
-            catch (JSONException jsonErr) {
-                Log.e(TAG, "Error when parsing json", jsonErr);
+            if(intent.hasExtra(EXTRA_APP_FLIP_CLIENT_ID)){
+                clientId = intent.getExtras().getString(EXTRA_APP_FLIP_CLIENT_ID);
+                scopes = intent.getExtras().getString(EXTRA_APP_FLIP_SCOPES);
+                redirectUri = intent.getExtras().getString(EXTRA_APP_FLIP_REDIRECT_URI);
+            } else {
+                Log.d(TAG, "couldn't find extra " + EXTRA_APP_FLIP_CLIENT_ID);
+                Toast.makeText(context, "Did not received clientID", Toast.LENGTH_SHORT).show();
+                return;
             }
+            this.sendPushPayload(clientId);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-    }
+        Intent intent = new Intent(this,MainActivity.class);
+//        intent.setPackage("io.kiotbeta.dev");
+//        intent.setAction("android.intent.action.MAIN");
+       startActivityForResult(intent,105);
+        //finish();
+        //forceMainActivityReload();
 
-    private JSONObject exceptionToJson(final Exception exception) throws JSONException {
-        return new JSONObject() {
-            {
-                put("message", exception.getMessage());
-                put("cause", exception.getClass().getName());
-                put("stacktrace", exception.getStackTrace().toString());
-            }
-        };
-    }
-
-    public static void setInitialPushPayload(String clientId) {
-        client_id = clientId;
-        if(globalCallback!=null){
-            Log.d(TAG, "setInitialPushPayload");
-            //callback.success(jo);
-            PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, client_id);
-            pluginResult.setKeepCallback(true);
-            globalCallback.sendPluginResult(pluginResult);
-        }
     }
 
     @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (action.equals("coolMethod")) {
-            String message = args.getString(0);
-            this.coolMethod(message, callbackContext);
-            return true;
-        } else if(action.equals("getInitialPushPayload")) {
-            getInitialPushPayload(callbackContext);
-        } else if(action.equals("sendAuthCode")) {
-            String code = args.getString(0);
-            String status = args.getString(1);
-            String message = args.getString(2);
-            sendAuthCode(code,status,message,callbackContext);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == 105){
+            setResult(resultCode,data);
+            finish();
+        }
+    }
+
+    public void getAuthCode(Intent returnIntent) {
+        result = returnIntent;
+       setResult(Activity.RESULT_OK, result);
+    }
+
+    private boolean validateCallingApp(ComponentName callingActivity) {
+        if (callingActivity != null) {
+            String packageName = callingActivity.getPackageName();
+            if (callingAppPackageName.equalsIgnoreCase(packageName)) {
+                try {
+                    String fingerPrint = getCertificateFingerprint(getApplicationContext(), packageName);
+                    return callingAppFingerprint.equalsIgnoreCase(fingerPrint);
+                } catch (PackageManager.NameNotFoundException e) {
+                    Log.e(TAG, "No such app is installed", e);
+                }
+            }
         }
         return false;
     }
 
-    private void sendAuthCode(String code, String status, String message, CallbackContext callbackContext) {
-        Intent returnIntent = new Intent();
-        String errorCodeString = status;
-        int errorCode = 0;
-        if(errorCodeString!=null){
-            try{
-                errorCode = Integer.valueOf(errorCodeString);
-            } catch (NumberFormatException e){
-                return;
-            }
+    @Nullable
+    private String getCertificateFingerprint(Context context, String packageName)
+            throws PackageManager.NameNotFoundException {
+        PackageManager pm = context.getPackageManager();
+        PackageInfo packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
+        Signature[] signatures = packageInfo.signatures;
+        InputStream input = new ByteArrayInputStream(signatures[0].toByteArray());
+        try {
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
+            X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(input);
+            MessageDigest md = MessageDigest.getInstance(SIGNATURE_DIGEST_ALGORITHM);
+            byte[] publicKey = md.digest(certificate.getEncoded());
+            return byte2HexFormatted(publicKey);
+        } catch (CertificateException | NoSuchAlgorithmException e) {
+            Log.e(TAG, "Failed to process the certificate", e);
         }
-        if(code!=null){
-            if(code.length()>0) {
-                String authCode = code;
-                returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, authCode);
-                //setResult(Activity.RESULT_OK, returnIntent);
-            }
-        }
+        return null;
     }
 
-    private void coolMethod(String message, CallbackContext callbackContext) {
-        if (message != null && message.length() > 0) {
-            callbackContext.success(message);
-        } else {
-            callbackContext.error("Expected one non-empty string argument.");
+    private String byte2HexFormatted(byte[] byteArray) {
+        Formatter formatter = new Formatter();
+        for (int i = 0; i < byteArray.length - 1; i++) {
+            formatter.format("%02x:", byteArray[i]);
         }
+        formatter.format("%02x", byteArray[byteArray.length - 1]);
+        return formatter.toString().toUpperCase();
+    }
+
+    private void sendPushPayload(String clientId) throws JSONException {
+        Log.d(TAG, "==> USER entered appflip");
+        AppFlip.setInitialPushPayload(clientId);
+//        Bundle intentExtras = getIntent().getExtras();
+//        if(intentExtras == null) {
+//            return;
+//        }
+//        Map<String, Object> data = new HashMap<String, Object>();
+//        data.put("wasTapped", true);
+//        for (String key : intentExtras.keySet()) {
+//            Object value = intentExtras.get(key);
+//            Log.d(TAG, "\tKey: " + key + " Value: " + value);
+//            data.put(key, value);
+//        }
+//        Parcelable[] rawMessages = (Parcelable[]) intentExtras.get("android.nfc.extra.NDEF_MESSAGES");
+//        if (rawMessages != null) {
+//            NdefMessage[] messages = new NdefMessage[rawMessages.length];
+//            for (int i = 0; i < rawMessages.length; i++) {
+//                messages[i] = (NdefMessage) rawMessages[i];
+//            }
+//            NfcPlugin.setInitialPushPayload(messages);
+//        }
+    }
+    private void forceMainActivityReload() {
+        PackageManager pm = getPackageManager();
+        Intent launchIntent = pm.getLaunchIntentForPackage(getApplicationContext().getPackageName());
+        startActivity(launchIntent);
     }
 }
