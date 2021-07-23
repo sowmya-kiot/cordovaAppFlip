@@ -1,6 +1,11 @@
 package com.appflip.plugin;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.chariotsolutions.nfc.plugin.Util;
 
@@ -18,6 +23,7 @@ import org.json.JSONObject;
 public class AppFlip extends CordovaPlugin {
 
     private static final String TAG = "TAG";
+    private static final String EXTRA_APP_FLIP_AUTHORIZATION_CODE = "AUTHORIZATION_CODE";
     public static String client_id;
     public static CallbackContext globalCallback;
 
@@ -75,8 +81,33 @@ public class AppFlip extends CordovaPlugin {
             return true;
         } else if(action.equals("getInitialPushPayload")) {
             getInitialPushPayload(callbackContext);
+        } else if(action.equals("sendAuthCode")) {
+            String code = args.getString(0);
+            String status = args.getString(1);
+            String message = args.getString(2);
+            sendAuthCode(code,status,message,callbackContext);
         }
         return false;
+    }
+
+    private void sendAuthCode(String code, String status, String message, CallbackContext callbackContext) {
+        Intent returnIntent = new Intent();
+        String errorCodeString = status;
+        int errorCode = 0;
+        if(errorCodeString!=null){
+            try{
+                errorCode = Integer.valueOf(errorCodeString);
+            } catch (NumberFormatException e){
+                return;
+            }
+        }
+        if(code!=null){
+            if(code.length()>0) {
+                String authCode = code;
+                returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, authCode);
+                //setResult(Activity.RESULT_OK, returnIntent);
+            }
+        }
     }
 
     private void coolMethod(String message, CallbackContext callbackContext) {
