@@ -40,8 +40,8 @@ public class AppFlipActivity extends Activity {
     private static final String EXTRA_APP_FLIP_REDIRECT_URI = "REDIRECT_URI";
     private static final String SIGNATURE_DIGEST_ALGORITHM = "SHA-256";
     static Intent result = new Intent();
-    private String callingAppPackageName = "com.google.appfliptesttool";
-    private String callingAppFingerprint = "b3:f6:19:1f:fd:22:34:ec:a2:30:6d:7e:04:14:fc:09:bd:4a:58:15:dc:79:43:67:87:6c:11:66:5f:9e:a4:b9";
+    private String callingAppPackageName = "com.google.android.googlequicksearchbox";
+    private String callingAppFingerprint = "F0:FD:6C:5B:41:0F:25:CB:25:C3:B5:33:46:C8:97:2F:AE:30:F8:EE:74:11:DF:91:04:80:AD:6B:2D:60:DB:83";
 
 
     @Override
