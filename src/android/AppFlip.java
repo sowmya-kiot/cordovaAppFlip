@@ -24,6 +24,14 @@ public class AppFlip extends CordovaPlugin {
 
     private static final String TAG = "TAG";
     private static final String EXTRA_APP_FLIP_AUTHORIZATION_CODE = "AUTHORIZATION_CODE";
+    private static final String EXTRA_APP_FLIP_ERROR_TYPE = "ERROR_TYPE";
+    private static final String EXTRA_APP_FLIP_ERROR_CODE = "ERROR_CODE";
+    private static final int APP_FLIP_RESULT_ERROR = -2;
+    private static final String EXTRA_APP_FLIP_ERROR_DESCRIPTION = "ERROR_DESCRIPTION";
+    private static final int APP_FLIP_RECOVERABLE_ERROR = 1;
+    private static final int APP_FLIP_UNRECOVERABLE_ERROR = 2;
+    private static final int APP_FLIP_INVALID_REQUEST_ERROR = 3;
+    private static final int APP_FLIP_USER_DENIED_3P_CONSENT_ERROR_CODE = 13;
     public static String client_id;
     public static CallbackContext globalCallback;
 
@@ -101,11 +109,24 @@ public class AppFlip extends CordovaPlugin {
         //         return;
         //     }
         // }
+        if(message!=null){
+//            returnIntent.putExtra(EXTRA_APP_FLIP_ERROR_TYPE, APP_FLIP_RECOVERABLE_ERROR);
+//            returnIntent.putExtra(
+//                    EXTRA_APP_FLIP_ERROR_CODE, errorCode);
+            //returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, "");
+            cordova.getActivity().setResult(APP_FLIP_RESULT_ERROR, returnIntent);
+            cordova.getActivity().finish();
+        }
         if(code!=null){
             if(code.length()>0) {
                 String authCode = code;
+                Log.d(authCode,"Hellooooooo");
                 returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, authCode);
                 cordova.getActivity().setResult(Activity.RESULT_OK, returnIntent);
+                cordova.getActivity().finish();
+            } else {
+                returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, "");
+                cordova.getActivity().setResult(Activity.RESULT_CANCELED, returnIntent);
                 cordova.getActivity().finish();
             }
         }
