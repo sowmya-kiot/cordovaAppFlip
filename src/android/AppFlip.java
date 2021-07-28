@@ -109,18 +109,18 @@ public class AppFlip extends CordovaPlugin {
         //         return;
         //     }
         // }
-        if(message!=null){
-//            returnIntent.putExtra(EXTRA_APP_FLIP_ERROR_TYPE, APP_FLIP_RECOVERABLE_ERROR);
-//            returnIntent.putExtra(
-//                    EXTRA_APP_FLIP_ERROR_CODE, errorCode);
-            //returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, "");
-            cordova.getActivity().setResult(APP_FLIP_RESULT_ERROR, returnIntent);
-            cordova.getActivity().finish();
-        }
+//        if(message.isEmpty()){
+////            returnIntent.putExtra(EXTRA_APP_FLIP_ERROR_TYPE, APP_FLIP_RECOVERABLE_ERROR);
+////            returnIntent.putExtra(
+////                    EXTRA_APP_FLIP_ERROR_CODE, errorCode);
+//            //returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, "");
+//            cordova.getActivity().setResult(APP_FLIP_RESULT_ERROR, returnIntent);
+//            cordova.getActivity().finish();
+//        }
         if(code!=null){
             if(code.length()>0) {
                 String authCode = code;
-                Log.d(authCode,"Hellooooooo");
+                Log.d(authCode+message+message.length(),"Hellooooooo");
                 returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, authCode);
                 cordova.getActivity().setResult(Activity.RESULT_OK, returnIntent);
                 cordova.getActivity().finish();
