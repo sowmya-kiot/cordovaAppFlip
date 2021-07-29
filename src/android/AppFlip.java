@@ -101,7 +101,7 @@ public class AppFlip extends CordovaPlugin {
     private void sendAuthCode(String code, String status, String message, CallbackContext callbackContext) {
         Intent returnIntent = new Intent();
         String errorCodeString = status;
-        int errorCode = 0;
+        int errorCode = 1;
         // if(errorCodeString!=null){
         //     try{
         //         errorCode = Integer.valueOf(errorCodeString);
@@ -109,15 +109,15 @@ public class AppFlip extends CordovaPlugin {
         //         return;
         //     }
         // }
-//        if(message.isEmpty()){
-////            returnIntent.putExtra(EXTRA_APP_FLIP_ERROR_TYPE, APP_FLIP_RECOVERABLE_ERROR);
-////            returnIntent.putExtra(
-////                    EXTRA_APP_FLIP_ERROR_CODE, errorCode);
-//            //returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, "");
-//            cordova.getActivity().setResult(APP_FLIP_RESULT_ERROR, returnIntent);
-//            cordova.getActivity().finish();
-//        }
-        if(code!=null){
+        if(message!="null"){
+            returnIntent.putExtra(EXTRA_APP_FLIP_ERROR_TYPE, APP_FLIP_RECOVERABLE_ERROR);
+            returnIntent.putExtra(
+                    EXTRA_APP_FLIP_ERROR_CODE, errorCode);
+            //returnIntent.putExtra(EXTRA_APP_FLIP_AUTHORIZATION_CODE, "");
+            cordova.getActivity().setResult(APP_FLIP_RESULT_ERROR, returnIntent);
+            cordova.getActivity().finish();
+        }
+        if(code!="null"){
             if(code.length()>0) {
                 String authCode = code;
                 Log.d(authCode+message+message.length(),"Hellooooooo");
